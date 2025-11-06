@@ -8,7 +8,7 @@ import java.util.Random;
  * @author David J. Barnes e Michael Kolling
  * @version 2002-04-11
  */
-public class Coelho
+public class Coelho extends Animal
 {
     // Características compartilhadas por todos os coelhos (campos estáticos).
 
@@ -23,14 +23,9 @@ public class Coelho
     // Um gerador de números aleatórios compartilhado para controlar a reprodução.
     private static final Random aleatorio = new Random();
     
-    // Características individuais (campos de instância).
+   
     
-    // A idade do coelho.
-    private int idade;
-    // Indica se o coelho está vivo ou não.
-    private boolean vivo;
-    // A posição do coelho.
-    private Localizacao localizacao;
+     
 
     /**
      * Cria um novo coelho. Um coelho pode ser criado com idade zero
@@ -38,10 +33,10 @@ public class Coelho
      * 
      * @param idadeAleatoria Se true, o coelho terá uma idade aleatória.
      */
-    public Coelho(boolean idadeAleatoria)
+    public Coelho( boolean idadeAleatoria)
     {
-        idade = 0;
-        vivo = true;
+         
+         
         if(idadeAleatoria) {
             idade = aleatorio.nextInt(IDADE_MAXIMA);
         }
@@ -78,7 +73,11 @@ public class Coelho
             }
         }
     }
-    
+     @Override
+    public void agir(Campo campoAtual, Campo campoNovo, List<Animal> novos) {
+    // aqui você pode chamar o comportamento principal da raposa
+    correr(campoAtual, novos);
+    }
     /**
      * Aumenta a idade.
      * Isso pode resultar na morte do coelho.
@@ -135,6 +134,7 @@ public class Coelho
      * @param linha A coordenada vertical da localização.
      * @param coluna A coordenada horizontal da localização.
      */
+    @Override
     public void setLocalizacao(int linha, int coluna)
     {
         this.localizacao = new Localizacao(linha, coluna);
@@ -144,6 +144,7 @@ public class Coelho
      * Define a localização do coelho.
      * @param localizacao A nova localização do coelho.
      */
+    @Override
     public void setLocalizacao(Localizacao localizacao)
     {
         this.localizacao = localizacao;

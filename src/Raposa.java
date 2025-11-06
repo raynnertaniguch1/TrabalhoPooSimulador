@@ -9,7 +9,7 @@ import java.util.Random;
  * @author David J. Barnes e Michael Kolling
  * @version 2002-04-11
  */
-public class Raposa
+public class Raposa extends Animal
 {
     // Características compartilhadas por todas as raposas (campos estáticos).
 
@@ -29,12 +29,8 @@ public class Raposa
     
     // Características individuais (campos de instância).
 
-    // A idade da raposa.
-    private int idade;
-    // Se a raposa está viva ou não.
-    private boolean viva;
-    // A posição da raposa no campo.
-    private Localizacao localizacao;
+    
+   
     // O nível de comida da raposa, que aumenta ao comer coelhos.
     private int nivelComida;
 
@@ -44,10 +40,10 @@ public class Raposa
      * 
      * @param idadeAleatoria Se true, a raposa terá idade e fome aleatórias.
      */
-    public Raposa(boolean idadeAleatoria)
+    public Raposa(  boolean idadeAleatoria)
     {
-        idade = 0;
-        viva = true;
+         
+         
         if(idadeAleatoria) {
             idade = aleatorio.nextInt(IDADE_MAXIMA);
             nivelComida = aleatorio.nextInt(VALOR_COMIDA_COELHO);
@@ -92,11 +88,15 @@ public class Raposa
             }
             else {
                 // Não pode se mover nem ficar — superpopulação — todas as localizações ocupadas.
-                viva = false;
+                vivo = false;
             }
         }
     }
-    
+     @Override
+    public void agir(Campo campoAtual, Campo campoNovo, List<Animal> novos) {
+    // aqui você pode chamar o comportamento principal da raposa
+    caca(campoAtual, campoNovo, novos);
+    }
     /**
      * Aumenta a idade. Isso pode resultar na morte da raposa.
      */
@@ -104,7 +104,7 @@ public class Raposa
     {
         idade++;
         if(idade > IDADE_MAXIMA) {
-            viva = false;
+            vivo = false;
         }
     }
     
@@ -115,7 +115,7 @@ public class Raposa
     {
         nivelComida--;
         if(nivelComida <= 0) {
-            viva = false;
+            vivo = false;
         }
     }
     
@@ -171,25 +171,8 @@ public class Raposa
      */
     public boolean estaViva()
     {
-        return viva;
+        return vivo;
     }
 
-    /**
-     * Define a localização da raposa.
-     * @param linha A coordenada vertical.
-     * @param coluna A coordenada horizontal.
-     */
-    public void setLocalizacao(int linha, int coluna)
-    {
-        this.localizacao = new Localizacao(linha, coluna);
-    }
-
-    /**
-     * Define a localização da raposa.
-     * @param localizacao A nova localização da raposa.
-     */
-    public void setLocalizacao(Localizacao localizacao)
-    {
-        this.localizacao = localizacao;
-    }
+  
 }
