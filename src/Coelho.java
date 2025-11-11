@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -8,24 +8,22 @@ import java.util.Random;
  * @author David J. Barnes e Michael Kolling
  * @version 2002-04-11
  */
-public class Coelho extends Animal
+public class Coelho extends SerVivo
 {
     // Características compartilhadas por todos os coelhos (campos estáticos).
 
     // A idade em que um coelho pode começar a se reproduzir.
-    private static final int IDADE_REPRODUCAO = 5;
+    private static final int IDADE_REPRODUCAO = 3; // era 5 — reduzida para aumentar a taxa de sobrevivência
     // A idade máxima que um coelho pode atingir.
     private static final int IDADE_MAXIMA = 50;
     // A probabilidade de um coelho se reproduzir.
-    private static final double PROBABILIDADE_REPRODUCAO = 0.15;
+    private static final double PROBABILIDADE_REPRODUCAO = 0.18; // antes 0.12 — melhora taxa populacional
+
     // O número máximo de filhotes por ninhada.
-    private static final int TAMANHO_MAXIMO_NINHADA = 5;
+    private static final int TAMANHO_MAXIMO_NINHADA = 4;         // antes 3 — mais descendentes
+
     // Um gerador de números aleatórios compartilhado para controlar a reprodução.
     private static final Random aleatorio = new Random();
-    
-   
-    
-     
 
     /**
      * Cria um novo coelho. Um coelho pode ser criado com idade zero
@@ -33,120 +31,66 @@ public class Coelho extends Animal
      * 
      * @param idadeAleatoria Se true, o coelho terá uma idade aleatória.
      */
-    public Coelho( boolean idadeAleatoria)
+    public Coelho(boolean idadeAleatoria)
     {
-         
-         
-        if(idadeAleatoria) {
+        super();
+        this.idadeMaxima = IDADE_MAXIMA;
+        this.idadeReproducao = IDADE_REPRODUCAO;
+        this.probabilidadeReproducao = PROBABILIDADE_REPRODUCAO;
+        this.tamanhoMaximoNinhada = TAMANHO_MAXIMO_NINHADA;
+
+        if (idadeAleatoria) {
             idade = aleatorio.nextInt(IDADE_MAXIMA);
+        } else {
+            idade = 0;
         }
     }
-    
+
     /**
-     * Isto é o que o coelho faz na maior parte do tempo — ele corre
-     * por aí. Às vezes ele se reproduz ou morre de velhice.
+     * Isto é o que o coelho faz na maior parte do tempo — ele se move
+     * por aí em busca de espaço livre. Às vezes ele se reproduz ou morre
+     * de velhice.
      * 
-     * @param campoAtualizado O campo atualizado para o novo passo.
-     * @param novosCoelhos Lista onde novos coelhos nascidos serão adicionados.
-     */
-    public void correr(Campo campoAtualizado, List novosCoelhos)
-    {
-        envelhecer();
-        if(vivo) {
-            int nascimentos = reproduzir();
-            for(int b = 0; b < nascimentos; b++) {
-                Coelho novoCoelho = new Coelho(false);
-                novosCoelhos.add(novoCoelho);
-                Localizacao loc = campoAtualizado.localizacaoAdjacenteAleatoria(localizacao);
-                novoCoelho.setLocalizacao(loc);
-                campoAtualizado.colocar(novoCoelho, loc);
-            }
-            Localizacao novaLocalizacao = campoAtualizado.localizacaoAdjacenteLivre(localizacao);
-            // Só se move para o campo atualizado se houver uma localização livre.
-            if(novaLocalizacao != null) {
-                setLocalizacao(novaLocalizacao);
-                campoAtualizado.colocar(this, novaLocalizacao);
-            }
-            else {
-                // Não pode se mover nem ficar — superpopulação — todas as localizações ocupadas.
-                vivo = false;
-            }
-        }
-    }
-     @Override
-    public void agir(Campo campoAtual, Campo campoNovo, List<Animal> novos) {
-    // aqui você pode chamar o comportamento principal da raposa
-    correr(campoAtual, novos);
-    }
-    /**
-     * Aumenta a idade.
-     * Isso pode resultar na morte do coelho.
-     */
-    private void envelhecer()
-    {
-        idade++;
-        if(idade > IDADE_MAXIMA) {
-            vivo = false;
-        }
-    }
-    
-    /**
-     * Gera um número representando o número de nascimentos,
-     * se o coelho puder se reproduzir.
-     * @return O número de nascimentos (pode ser zero).
-     */
-    private int reproduzir()
-    {
-        int nascimentos = 0;
-        if(podeReproduzir() && aleatorio.nextDouble() <= PROBABILIDADE_REPRODUCAO) {
-            nascimentos = aleatorio.nextInt(TAMANHO_MAXIMO_NINHADA) + 1;
-        }
-        return nascimentos;
-    }
-
-    /**
-     * Um coelho pode se reproduzir se tiver atingido a idade de reprodução.
-     */
-    private boolean podeReproduzir()
-    {
-        return idade >= IDADE_REPRODUCAO;
-    }
-    
-    /**
-     * Verifica se o coelho está vivo ou não.
-     * @return true se o coelho ainda estiver vivo.
-     */
-    public boolean estaVivo()
-    {
-        return vivo;
-    }
-
-    /**
-     * Indica que o coelho foi comido.
-     */
-    public void foiComido()
-    {
-        vivo = false;
-    }
-    
-    /**
-     * Define a localização do coelho.
-     * @param linha A coordenada vertical da localização.
-     * @param coluna A coordenada horizontal da localização.
+     * @param campoAtual O campo atual.
+     * @param campoNovo  O campo atualizado para o novo passo.
      */
     @Override
-    public void setLocalizacao(int linha, int coluna)
-    {
-        this.localizacao = new Localizacao(linha, coluna);
+    protected void mover(Campo campoAtual, Campo campoNovo) {
+        // Coelho tenta primeiro encontrar uma planta para comer.
+        Iterator<Localizacao> adjacentes = campoAtual.localizacoesAdjacentes(localizacao);
+        while (adjacentes.hasNext()) {
+            Localizacao onde = adjacentes.next();
+            Object ator = campoAtual.getObjetoEm(onde);
+            if (ator instanceof Planta) {
+                Planta planta = (Planta) ator;
+                if (planta.estaVivo()) {
+                    planta.morrer(); // planta foi comida
+                    setLocalizacao(onde);
+                    campoNovo.colocar(this, onde);
+                    return; // comeu e se moveu
+                }
+            }
+        }
+
+        // Se não encontrou planta, move-se aleatoriamente.
+        Localizacao novaLocalizacao = campoNovo.localizacaoAdjacenteLivre(localizacao);
+        if (novaLocalizacao != null) {
+            setLocalizacao(novaLocalizacao);
+            campoNovo.colocar(this, novaLocalizacao);
+        } else {
+            // Superpopulação: não conseguiu se mover.
+            morrer();
+        }
     }
 
     /**
-     * Define a localização do coelho.
-     * @param localizacao A nova localização do coelho.
+     * Cria um novo coelho (filho).
+     * 
+     * @return Uma nova instância de Coelho.
      */
     @Override
-    public void setLocalizacao(Localizacao localizacao)
+    protected Ator criarFilho()
     {
-        this.localizacao = localizacao;
+        return new Coelho(false);
     }
 }

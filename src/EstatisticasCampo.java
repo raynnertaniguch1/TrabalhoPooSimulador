@@ -64,13 +64,13 @@ public class EstatisticasCampo
     /**
      * Incrementa a contagem para uma classe de animal.
      */
-    public void incrementarContagem(Class classeAnimal)
+    public void incrementarContagem(Class classeAtor)
     {
-        Contador contador = (Contador) contadores.get(classeAnimal);
+        Contador contador = (Contador) contadores.get(classeAtor);
         if(contador == null) {
             // Ainda não temos um contador para esta espécie — cria um.
-            contador = new Contador(classeAnimal.getName());
-            contadores.put(classeAnimal, contador);
+            contador = new Contador(classeAtor.getName());
+            contadores.put(classeAtor, contador);
         }
         contador.incrementar();
     }
@@ -116,9 +116,9 @@ public class EstatisticasCampo
         reiniciar();
         for(int linha = 0; linha < campo.getProfundidade(); linha++) {
             for(int coluna = 0; coluna < campo.getLargura(); coluna++) {
-                Object animal = campo.getObjetoEm(new Localizacao(linha, coluna));
-                if(animal != null) {
-                    incrementarContagem(animal.getClass());
+                Object ator = campo.getObjetoEm(new Localizacao(linha, coluna));
+                if(ator != null) {
+                    incrementarContagem(ator.getClass());
                 }
             }
         }

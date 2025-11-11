@@ -1,18 +1,18 @@
 import java.util.List;
 
 public abstract class Animal {
-    // 🔹 Atributos comuns a todos os animais
+    //  Atributos comuns a todos os animais
     protected int idade;
     protected boolean vivo;
     protected Localizacao localizacao;
 
-    // 🔹 Construtor padrão
+    //  Construtor padrão
     public Animal() {
         this.idade = 0;
         this.vivo = true;
     }
 
-    // 🔹 Métodos comuns
+    //  Métodos comuns
     public boolean estaVivo() {
         return vivo;
     }
