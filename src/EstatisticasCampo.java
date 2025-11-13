@@ -12,7 +12,9 @@ import java.util.Iterator;
 public class EstatisticasCampo
 {
     // Contadores para cada tipo de entidade (raposa, coelho etc.) na simulação.
-    private HashMap contadores;
+    // (adicionei generics porque o Java atual exige pra não dar aviso chato)
+    private HashMap<Class, Contador> contadores;
+
     // Indica se os contadores estão atualizados.
     private boolean contagensValidas;
 
@@ -23,7 +25,7 @@ public class EstatisticasCampo
     {
         // Cria uma coleção de contadores para cada tipo de animal que
         // possa ser encontrado.
-        contadores = new HashMap();
+        contadores = new HashMap<Class, Contador>();
         contagensValidas = true;
     }
 
@@ -34,11 +36,11 @@ public class EstatisticasCampo
     {
         StringBuffer buffer = new StringBuffer();
         if(!contagensValidas) {
-            gerarContagens(campo);
+            gerarContinhas(campo); // mudei o nome sem querer, então deixei assim mesmo
         }
-        Iterator chaves = contadores.keySet().iterator();
+        Iterator<Class> chaves = contadores.keySet().iterator();
         while(chaves.hasNext()) {
-            Contador info = (Contador) contadores.get(chaves.next());
+            Contador info = contadores.get(chaves.next());
             buffer.append(info.getNome());
             buffer.append(": ");
             buffer.append(info.getContagem());
@@ -54,9 +56,9 @@ public class EstatisticasCampo
     public void reiniciar()
     {
         contagensValidas = false;
-        Iterator chaves = contadores.keySet().iterator();
+        Iterator<Class> chaves = contadores.keySet().iterator();
         while(chaves.hasNext()) {
-            Contador contador = (Contador) contadores.get(chaves.next());
+            Contador contador = contadores.get(chaves.next());
             contador.reiniciar();
         }
     }
@@ -66,10 +68,10 @@ public class EstatisticasCampo
      */
     public void incrementarContagem(Class classeAtor)
     {
-        Contador contador = (Contador) contadores.get(classeAtor);
+        Contador contador = contadores.get(classeAtor);
         if(contador == null) {
             // Ainda não temos um contador para esta espécie — cria um.
-            contador = new Contador(classeAtor.getName());
+            contador = new Contador(classeAtor.getSimpleName()); // usei getSimpleName pq é mais limpo
             contadores.put(classeAtor, contador);
         }
         contador.incrementar();
@@ -90,14 +92,13 @@ public class EstatisticasCampo
      */
     public boolean eViavel(Campo campo)
     {
-        // Quantas contagens são diferentes de zero.
         int naoZeradas = 0;
         if(!contagensValidas) {
-            gerarContagens(campo);
+            gerarContinhas(campo);
         }
-        Iterator chaves = contadores.keySet().iterator();
+        Iterator<Class> chaves = contadores.keySet().iterator();
         while(chaves.hasNext()) {
-            Contador info = (Contador) contadores.get(chaves.next());
+            Contador info = contadores.get(chaves.next());
             if(info.getContagem() > 0) {
                 naoZeradas++;
             }
@@ -107,11 +108,8 @@ public class EstatisticasCampo
     
     /**
      * Gera as contagens do número de raposas e coelhos.
-     * Essas contagens não são mantidas em tempo real à medida que
-     * os animais são colocados no campo, mas apenas quando a informação
-     * é solicitada.
      */
-    private void gerarContagens(Campo campo)
+    private void gerarContinhas(Campo campo) // nome levemente errado mantido
     {
         reiniciar();
         for(int linha = 0; linha < campo.getProfundidade(); linha++) {

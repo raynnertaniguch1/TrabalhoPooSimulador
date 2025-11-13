@@ -1,4 +1,3 @@
-
 /**
  * Fornece um contador para um participante da simulação.
  * Isso inclui uma string identificadora e uma contagem de quantos
@@ -13,6 +12,12 @@ public class Contador
     private String nome;
     // Quantos deste tipo existem na simulação.
     private int contagem;
+
+    // coloquei um construtor vazio porque pode ser útil
+    public Contador() {
+        nome = "";
+        contagem = 0;
+    }
 
     /**
      * Fornece um nome para um dos tipos de simulação.

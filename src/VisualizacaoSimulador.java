@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashMap;
 import javax.swing.*;
 
@@ -29,16 +31,18 @@ public class VisualizacaoSimulador extends JFrame {
     private VisaoCampo visaoCampo;
 
     // Um mapa para armazenar as cores dos participantes da simulação.
-    private HashMap cores;
+    private HashMap<Class, Color> cores;
     // Um objeto de estatísticas que calcula e armazena informações da simulação.
     private EstatisticasCampo estatisticas;
 
-    // 🔹 Novos componentes adicionados
+    // Componentes de controle da simulação.
     private JButton botaoIniciar;
     private JButton botaoPausar;
     private JButton botaoReiniciar;
+    private JButton botaoSimulacaoLonga;
 
-    // 🔹 Controle da simulação
+
+    // Referência ao simulador e controle de execução em thread separada.
     private Simulador simulador;
     private boolean executando = false;
     private Thread threadSimulacao;
@@ -48,9 +52,9 @@ public class VisualizacaoSimulador extends JFrame {
      */
     public VisualizacaoSimulador(int altura, int largura) {
         estatisticas = new EstatisticasCampo();
-        cores = new HashMap();
+        cores = new HashMap<Class, Color>();
 
-        setTitle("Simulação de Raposas e Coelhos");
+        setTitle("Simulação de Raposas, Coelhos, Lobos e Plantas");
         rotuloPasso = new JLabel(PREFIXO_PASSO, JLabel.CENTER);
         rotuloPopulacao = new JLabel(PREFIXO_POPULACAO, JLabel.CENTER);
 
@@ -64,20 +68,30 @@ public class VisualizacaoSimulador extends JFrame {
         conteudo.add(visaoCampo, BorderLayout.CENTER);
         conteudo.add(rotuloPopulacao, BorderLayout.SOUTH);
 
-        // 🔹 Painel de botões adicionado na parte inferior
+        // Painel de botões adicionado na parte inferior.
+        JPanel painelSul = new JPanel();
+        painelSul.setLayout(new BorderLayout());
+
+        rotuloPopulacao = new JLabel(PREFIXO_POPULACAO, JLabel.CENTER);
+        painelSul.add(rotuloPopulacao, BorderLayout.NORTH);
+
         JPanel painelBotoes = new JPanel();
         painelBotoes.setLayout(new FlowLayout());
-
         botaoIniciar = new JButton("▶ Iniciar");
         botaoPausar = new JButton("⏸ Pausar");
         botaoReiniciar = new JButton("↺ Reiniciar");
+        botaoSimulacaoLonga = new JButton("⏩ Simulação Longa");
 
+        painelBotoes.add(botaoSimulacaoLonga);
         painelBotoes.add(botaoIniciar);
         painelBotoes.add(botaoPausar);
         painelBotoes.add(botaoReiniciar);
 
-        conteudo.add(painelBotoes, BorderLayout.PAGE_END);
+        painelSul.add(painelBotoes, BorderLayout.SOUTH);
 
+        conteudo.add(painelSul, BorderLayout.SOUTH);
+
+        // Configura os ouvintes dos botões usando classes internas anônimas.
         configurarEventos();
 
         pack();
@@ -87,37 +101,86 @@ public class VisualizacaoSimulador extends JFrame {
 
     /**
      * Define o simulador associado a esta visualização.
+     * Isso permite que os botões controlem a simulação.
      */
     public void definirSimulador(Simulador simulador) {
         this.simulador = simulador;
     }
 
     /**
-     * Configura os eventos de clique dos botões.
+     * Configura os eventos de clique dos botões
+     * utilizando classes internas anônimas (sem lambdas).
      */
     private void configurarEventos() {
-        botaoIniciar.addActionListener(e -> iniciarSimulacao());
-        botaoPausar.addActionListener(e -> pausarSimulacao());
-        botaoReiniciar.addActionListener(e -> reiniciarSimulacao());
+        // Botão Iniciar: inicia a simulação em uma nova thread.
+        botaoIniciar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                iniciarSimulacao();
+            }
+        });
+
+        // Botão Pausar: interrompe o laço de simulação.
+        botaoPausar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pausarSimulacao();
+            }
+        });
+
+        // Botão Reiniciar: pausa e volta ao estado inicial.
+        botaoReiniciar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reiniciarSimulacao();
+            }
+        });
+        // Botão Simulação Longa
+    botaoSimulacaoLonga.addActionListener(new ActionListener() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (simulador != null && !executando) {
+            executando = true;
+            new Thread(new Runnable() {
+                public void run() {
+                    simulador.executarSimulacaoLonga();
+                    executando = false; // liberação depois de terminar
+                }
+            }).start();
+        }
+    }
+    });
+
     }
 
     /**
-     * Inicia a simulação em uma nova thread.
+     * Inicia a simulação em uma nova thread, executando passo a passo
+     * enquanto a simulação continuar viável.
      */
     private void iniciarSimulacao() {
-        if (simulador == null || executando) return;
+        // Se não há simulador ou já está rodando, não faz nada.
+        if (simulador == null || executando) {
+            return;
+        }
 
         executando = true;
-        threadSimulacao = new Thread(() -> {
-            while (executando && simulador.eViavel()) {
-                simulador.simularUmPasso();
-                try {
-                    Thread.sleep(100); // controle de velocidade
-                } catch (InterruptedException e) {
-                    break;
+
+        threadSimulacao = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Enquanto estiver executando e a simulação for viável, avança um passo.
+                while (executando && simulador.eViavel()) {
+                    simulador.simularUmPasso();
+                    try {
+                        Thread.sleep(100); // controle de velocidade da simulação
+                    } catch (InterruptedException ex) {
+                        // Thread interrompida: sai do laço.
+                        break;
+                    }
                 }
             }
         });
+
         threadSimulacao.start();
     }
 
@@ -132,7 +195,8 @@ public class VisualizacaoSimulador extends JFrame {
      * Reinicia a simulação para o estado inicial.
      */
     private void reiniciarSimulacao() {
-        executando = false;
+        // Garante que o laço de execução seja encerrado.
+        pausarSimulacao();
         if (simulador != null) {
             simulador.reiniciar();
         }
@@ -168,17 +232,22 @@ public class VisualizacaoSimulador extends JFrame {
      * @param campo O campo cuja situação será representada.
      */
     public void mostrarStatus(int passo, Campo campo) {
-        if (!isVisible())
+        if (!isVisible()) {
             setVisible(true);
+        }
 
         rotuloPasso.setText(PREFIXO_PASSO + passo);
+         
+
+        rotuloPopulacao.setText(PREFIXO_POPULACAO + estatisticas.getDetalhesPopulacao(campo));
 
         estatisticas.reiniciar();
         visaoCampo.prepararPintura();
 
         for (int linha = 0; linha < campo.getProfundidade(); linha++) {
             for (int coluna = 0; coluna < campo.getLargura(); coluna++) {
-                Object animal = campo.getObjetoEm(new Localizacao(linha, coluna));
+                // Usa diretamente a posição (linha, coluna), como no livro.
+                Object animal = campo.getObjetoEm(linha, coluna);
                 if (animal != null) {
                     estatisticas.incrementarContagem(animal.getClass());
                     visaoCampo.desenharMarca(coluna, linha, getCor(animal.getClass()));
@@ -232,7 +301,7 @@ public class VisualizacaoSimulador extends JFrame {
          */
         public Dimension getPreferredSize() {
             return new Dimension(larguraGrade * FATOR_ESCALA_GRADE,
-                    alturaGrade * FATOR_ESCALA_GRADE);
+                                 alturaGrade * FATOR_ESCALA_GRADE);
         }
 
         /**
@@ -243,7 +312,7 @@ public class VisualizacaoSimulador extends JFrame {
         public void prepararPintura() {
             if (!tamanho.equals(getSize())) {  // se o tamanho mudou...
                 tamanho = getSize();
-                imagemCampo = visaoCampo.createImage(tamanho.width, tamanho.height);
+                imagemCampo = createImage(tamanho.width, tamanho.height);
                 g = imagemCampo.getGraphics();
 
                 escalaX = tamanho.width / larguraGrade;

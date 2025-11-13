@@ -71,6 +71,9 @@ public class Simulador {
 
         // Define um ponto de partida válido
         reiniciar();
+         
+    visualizacao.definirSimulador(this);
+
     }
 
     /**
