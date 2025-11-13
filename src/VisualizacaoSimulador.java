@@ -112,46 +112,46 @@ public class VisualizacaoSimulador extends JFrame {
      * utilizando classes internas anônimas (sem lambdas).
      */
     private void configurarEventos() {
-        // Botão Iniciar: inicia a simulação em uma nova thread.
-        botaoIniciar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                iniciarSimulacao();
-            }
-        });
+    botaoIniciar.addActionListener(new OuvinteBotaoIniciar());
+    botaoPausar.addActionListener(new OuvinteBotaoPausar());
+    botaoReiniciar.addActionListener(new OuvinteBotaoReiniciar());
+    botaoSimulacaoLonga.addActionListener(new OuvinteBotaoSimulacaoLonga());
+}
 
-        // Botão Pausar: interrompe o laço de simulação.
-        botaoPausar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                pausarSimulacao();
-            }
-        });
+// abaixo, no final da classe VisualizacaoSimulador
 
-        // Botão Reiniciar: pausa e volta ao estado inicial.
-        botaoReiniciar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reiniciarSimulacao();
-            }
-        });
-        // Botão Simulação Longa
-    botaoSimulacaoLonga.addActionListener(new ActionListener() {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (simulador != null && !executando) {
-            executando = true;
-            new Thread(new Runnable() {
-                public void run() {
-                    simulador.executarSimulacaoLonga();
-                    executando = false; // liberação depois de terminar
-                }
-            }).start();
+    private class OuvinteBotaoIniciar implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            iniciarSimulacao();
         }
     }
-    });
 
+    private class OuvinteBotaoPausar implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            pausarSimulacao();
+        }
     }
+
+    private class OuvinteBotaoReiniciar implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            reiniciarSimulacao();
+        }
+    }
+
+    private class OuvinteBotaoSimulacaoLonga implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            if (simulador != null && !executando) {
+                executando = true;
+                new Thread(new Runnable() {
+                    public void run() {
+                        simulador.executarSimulacaoLonga();
+                        executando = false;
+                    }
+                }).start();
+            }
+        }
+    }
+
 
     /**
      * Inicia a simulação em uma nova thread, executando passo a passo
