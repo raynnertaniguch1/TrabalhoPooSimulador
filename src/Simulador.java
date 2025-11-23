@@ -97,6 +97,8 @@ public class Simulador {
      * Itera sobre todo o campo, atualizando o estado de cada ator.
      */
     public void simularUmPasso() {
+        atores.removeIf(a -> a == null);
+
         passo++;
         novosAtores.clear();
 
@@ -142,6 +144,8 @@ public class Simulador {
     private void povoar(Campo campo) {
         Random aleatorio = new Random();
         campo.limpar();
+        atores.removeIf(a -> a == null);
+
 
         for (int linha = 0; linha < campo.getProfundidade(); linha++) {
             for (int coluna = 0; coluna < campo.getLargura(); coluna++) {
